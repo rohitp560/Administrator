@@ -1,0 +1,233 @@
+
+Installation of Ansible in ubuntu :
+
+Create a vm & open required ports.
+
+Disable the firewall..
+
+sudo ufw disable -- to disable firewall.
+
+
+Login
+
+Sudo-s
+
+$ sudo apt update
+$ sudo apt install software-properties-common
+$ sudo add-apt-repository --yes --update ppa:ansible/ansible
+$ sudo apt install ansible -Y
+
+Ansible --version
+
+apt install python3-pip --> install pip
+
+Pip3 install "pywinrm>=0.3.0" for winrm module..
+
+sudo ufw disable --> firewall disable.
+
+Now open
+
+/etc/ansiable/hosts
+
+[win]
+10.0.0.4
+
+[win:vars]
+ansible_user=XXXXX
+ansible_password=XXXXXXXX
+ansible_connection=winrm
+ansible_winrm_server_cert_validation=ignore
+
+Test a simple ansible module
+
+
+
+https://docs.ansible.com/ansible/latest/command_guide/intro_adhoc.html
+
+ansible win -m win_ping --> to ping windows server…
+
+Run a sample small play book as below. Save it as test.yaml file
+
+---
+- hosts: win
+  gather_facts: no
+  tasks:
+   - name: Install Chocolatey on windows10
+     win_chocolatey: name=procexp state=present
+
+Then run
+ansible-playbook test.yaml
+
+On windows server :
+
+https://docs.ansible.com/ansible/latest/os_guide/windows_setup.html
+
+Install .net framework 4.8 from https://dotnet.microsoft.com/en-us/download/dotnet-framework/thank-you/net48-web-installer
+
+Note : restart the VM after installation of .net frame work.
+
+Run the powershell script which will enable the winrm in windows server.
+
+Windows initial setup is ready now…
+
+Now you can run playbooks from control plane to managed nodes..
+
+https://yamlchecker.com/
+
+-------------------------------------------------Sample playbook---------------
+
+why we use community.windows??? what is ansible galaxy????
+
+Ansible galaxy is a market place where you have multiple ready made roles...
+https://galaxy.ansible.com/ui/
+
+---
+- name: Download and extract zip file, then run a command on Windows
+  hosts: win
+  gather_facts: no
+
+  tasks:
+    - name: Create directory for zip file
+      ansible.windows.win_file:
+        path: C:\sap
+        state: directory
+
+    - name: Download zip file
+      ansible.windows.win_get_url:
+        url: https://github.com/kumarawsbit/Azure/archive/refs/heads/main.zip
+        dest: C:\sap\main.zip
+
+    - name: Unzip the file
+      community.windows.win_unzip:
+        src: C:\sap\main.zip
+        dest: C:\sap\extracted
+        creates_path: yes
+        
+    - name: Stop the service
+      ansible.windows.win_service:
+        name: "Spooler"  # Replace with the name of the service you want to stop
+        start_mode: manual  # Ensure service doesn't restart automatically
+        state: stopped  # Ensure service is stopped
+
+    - name: Remove downloaded zip file
+      ansible.windows.win_file:
+        path: C:\sap\main.zip
+        state: absent
+
+--------------------------------------------
+
+Ansible with conditions
+
+- name: Install package only on CentOS
+  ansible.builtin.yum:
+    name: nginx
+    state: present
+  when: ansible_facts['distribution'] == 'CentOS'
+
+
+
+- name: Restart nginx if config file changes
+  ansible.builtin.service:
+    name: nginx
+    state: restarted
+  when: ansible_check_mode and 'nginx' in ansible_facts.services
+
+----------------------------------------
+why we use jinja templates??
+
+Create a file jinja.txt 
+open it & add 
+
+My name is {{ ansible_facts }} and save the file. store the file in the control node /etc/ansible/jinja.txt
+
+create a playbook and run it.......
+
+---
+- name: Write hostname
+  hosts: all
+  tasks:
+  - name: write hostname using jinja2
+    ansible.builtin.template:
+       src: /etc/ansible/jinja.txt
+       dest: c:/sap/
+
+
+Conditons based jinja: 
+
+{% if ansible_facts.distribution == 'Microsoft Windows Server 2016 Datacenter' %}
+Adding content to windows 2016
+{% else %}
+Adding content to non windows 2016
+{% endif %}
+
+
+
+
+-----------------------------------------------------------------------------------
+what is ansible handlers?
+
+---
+- name: Download and extract zip file, then run a command on Windows
+  hosts: win
+  gather_facts: no
+
+  tasks:
+    - name: Create directory for zip file
+      ansible.windows.win_file:
+        path: C:\sap1
+        state: directory
+      notify:
+         - Run handler
+
+  handlers:
+  - name: Run handler
+    ansible.windows.win_service:
+        name: "Spooler"  # Replace with the name of the service you want to stop
+        start_mode: manual  # Ensure service doesn't restart automatically
+        state: stopped  # Ensure service is stopped
+
+
+--------------------------------------------------------------------------
+
+-------------------------------------------------------------------------
+Ansible Roles : Its same like creating function in programming..
+readabilty
+reuseablity
+
+To create a Role , you need to create full folder structure.... To make it easy, we can use galaxy command...
+
+cmd to create ansible role --> ansible-galaxy role init httpd
+
+vars
+tasks
+files
+templates
+tests
+defaults
+handlers
+
+Sample : 
+
+Create a playbook
+---
+- name: Write hostname
+  hosts: all
+  roles:
+    - httpd
+
+
+----------------------------
+
+Ansible tower
+
+Ansible Registry
+
+ansible register
+
+
+
+
+
+
+        
+ 
