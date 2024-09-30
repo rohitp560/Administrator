@@ -1,5 +1,0 @@
-This is a new line 
-My name is Rohit. 
-This is for conflict2. 
-This is for conflict 1 
->>>>>>> newazure
