@@ -1,2 +1,4 @@
 
 I'm working on stash command 
+ECHO is on.
+This is updated on stash 
