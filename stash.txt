@@ -1,3 +1,3 @@
 
-I'm working on stash command 
-I have added some more points 
+This is updated on stash 
+>>>>>>> parent of f67492c (Revert "go to do revert")
